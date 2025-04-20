@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chỉnh sửa thông tin người dùng</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .edit-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .form-row {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .form-row > div {
+      flex: 1;
+    }
+    
+    .profile-picture {
+      max-width: 150px;
+      max-height: 150px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+    
+    .actions {
+      margin-top: 20px;
+      text-align: right;
+    }
+    
+    .actions button {
+      padding: 10px 20px;
+      margin-left: 10px;
+      cursor: pointer;
+    }
+    
+    .btn-save {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+    }
+    
+    .btn-cancel {
+      background-color: #f44336;
+      color: white;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="logo">SocialApp</div>
+    <div class="nav-links">
+      <a href="/home">Trang chủ</a>
+      <a href="/post">Thêm bạn bè</a>
+      <a href="/Users">Bạn bè</a>
+      <a href="/socket">Thông tin</a>
+    </div>
+  </div>
+  
+  <div class="edit-container">
+    <h1>Chỉnh sửa thông tin người dùng</h1>
+    
+    <form id="editForm">
+      <div class="form-group">
+        <label for="userId">User ID:</label>
+        <input type="text" id="userId" name="userId" readonly>
+      </div>
+      
+      <div class="form-group">
+        <label for="username">Tên người dùng:</label>
+        <input type="text" id="username" name="username" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="firstname">Tên:</label>
+          <input type="text" id="firstname" name="firstname">
+        </div>
+        
+        <div class="form-group">
+          <label for="middlename">Tên đệm:</label>
+          <input type="text" id="middlename" name="middlename">
+        </div>
+        
+        <div class="form-group">
+          <label for="lastname">Họ:</label>
+          <input type="text" id="lastname" name="lastname">
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dob">Ngày sinh:</label>
+          <input type="date" id="dob" name="dob">
+        </div>
+        
+        <div class="form-group">
+          <label for="gender">Giới tính:</label>
+          <select id="gender" name="gender">
+            <option value="1">Nam</option>
+            <option value="0">Nữ</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="country">Quốc gia:</label>
+          <input type="text" id="country" name="country">
+        </div>
+        
+        <div class="form-group">
+          <label for="city">Thành phố:</label>
+          <input type="text" id="city" name="city">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="phonenumber">Số điện thoại:</label>
+        <input type="text" id="phonenumber" name="phonenumber">
+      </div>
+      
+      <div class="form-group">
+        <label for="bio">Tiểu sử:</label>
+        <textarea id="bio" name="bio" rows="3"></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label for="profileImage">Hình ảnh:</label>
+        <div>
+          <img id="currentImage" class="profile-picture" src="" alt="Profile Picture">
+        </div>
+        <input type="file" id="profilePicture" name="profilePicture" accept="image/*">
+      </div>
+      
+      <div class="actions">
+        <button type="button" class="btn-cancel" onclick="window.location.href='/Users'">Hủy</button>
+        <button type="submit" class="btn-save">Lưu thay đổi</button>
+      </div>
+    </form>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Lấy userId từ tham số URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const userId = urlParams.get('id');
+      
+      if (!userId) {
+        alert('Không tìm thấy ID người dùng. Vui lòng quay lại trang chính.');
+        window.location.href = '/Users';
+        return;
+      }
+      
+      // Fetch dữ liệu người dùng
+      fetchUserData(userId);
+      
+      // Set up form submission handler
+      document.getElementById('editForm').addEventListener('submit', handleFormSubmit);
+    });
+    
+    function fetchUserData(userId) {
+      fetch(`/Users/displayUser/${userId}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(user => {
+          // Auto-fill form with user data
+          document.getElementById('userId').value = user.userId || '';
+          document.getElementById('username').value = user.username || '';
+          document.getElementById('email').value = user.email || '';
+          
+          // Name fields
+          if (user.name) {
+            document.getElementById('firstname').value = user.name.first || '';
+            document.getElementById('middlename').value = user.name.middle || '';
+            document.getElementById('lastname').value = user.name.last || '';
+          }
+          
+          // Date of birth
+          if (user.dob) {
+            // Convert to YYYY-MM-DD format for date input
+            const dobDate = new Date(user.dob);
+            const formattedDate = dobDate.toISOString().split('T')[0];
+            document.getElementById('dob').value = formattedDate;
+          }
+          
+          // Gender
+          if (user.gender !== undefined) {
+            document.getElementById('gender').value = user.gender.toString();
+          }
+          
+          // Profile information
+          if (user.profile) {
+            // Location
+            if (user.profile.location) {
+              document.getElementById('country').value = user.profile.location.country || '';
+              document.getElementById('city').value = user.profile.location.city || '';
+            }
+            
+            // Phone and bio
+            document.getElementById('phonenumber').value = user.profile.phone || '';
+            document.getElementById('bio').value = user.profile.bio || '';
+            
+            // Profile picture
+            if (user.profile.picture) {
+              document.getElementById('currentImage').src = user.profile.picture;
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Lỗi khi tải dữ liệu người dùng:', error);
+          alert('Không thể tải thông tin người dùng. Vui lòng thử lại sau.');
+        });
+    }
+    
+    function handleFormSubmit(event) {
+      event.preventDefault();
+      
+      const formData = new FormData(event.target);
+      const userId = document.getElementById('userId').value;
+      
+      fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        body: formData
+      })
+      .then(response => {
+        if (!response.ok) {
+          return response.json().then(err => Promise.reject(err));
+        }
+        return response.json();
+      })
+      .then(data => {
+        alert('Cập nhật thông tin thành công!');
+        window.location.href = '/Users';
+      })
+      .catch(error => {
+        console.error('Lỗi khi cập nhật thông tin:', error);
+        alert(`Lỗi khi cập nhật: ${error.error || 'Vui lòng thử lại'}`);
+      });
+    }
+  </script>
+</body>
+</html>

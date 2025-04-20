@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Danh sách bạn bè</title>
+  <link rel="stylesheet" href="/style.css">
+
+</head>
+<body>
+  <div class="navbar">
+    <div class="logo">SocialApp</div>
+    <div class="nav-links">
+      <a href="/home">Trang chủ</a>
+      <a href="/post">Thêm bạn bè</a>
+      <a href="/Users">Bạn bè</a>
+      <a href="/socket">Thông tin</a>
+    </div>
+  </div>
+
+  <div class="container-friend">
+    <h1>Danh sách bạn bè</h1>
+
+    <label for="searchInput">Tìm kiếm <input type="text" id="searchInput" placeholder="Tìm kiếm bạn bè..." oninput="searchUsers()"></label>  <br>
+  <div style="margin-bottom: 20px;">
+    <!-- Tìm kiếm theo danh mục (giới tính là ví dụ) -->
+    <label>Giới tính:</label>
+    <select id="gender" onchange="applyFilters()">
+      <option value="">-- Tất cả --</option>
+      <option value="0">Nam</option>
+      <option value="1">Nữ</option>
+    </select>
+  
+    <!-- Gần đúng theo string -->
+    <label>Username:</label>
+    <input type="text" id="username" placeholder="Nhập username gần đúng">
+  
+    <label>Email:</label>
+    <input type="text" id="email" placeholder="Nhập email gần đúng">
+  
+    <!-- Trong khoảng số -->
+    <label>Tuổi từ:</label>
+    <input type="number" id="ageMin" placeholder="Tối thiểu" style="width: 70px;">
+    <label>đến</label>
+    <input type="number" id="ageMax" placeholder="Tối đa" style="width: 70px;">
+  
+    <!-- Tìm kiếm -->
+    <button onclick="">Tìm kiếm</button>
+    <button onclick="resetFilters()">Reset</button>
+  </div>
+  
+  <div class="container-friends-list">
+    <table id="friendsTable">
+      <thead>
+        <tr>
+          <th></th>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Gender</th>
+          <th>Chi tiết</th>
+          <th>Sửa</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div id="pagination"></div>
+  </div>
+  </div>
+<img src="../images/2233445566778" alt="">
+  <script>
+    let currentPage = 1;
+
+    function loadUsers(page = currentPage) {
+      fetch(`/Users/displayUser?page=${page}`)
+        .then(res => res.json())
+        .then(({ data, totalPages }) => {
+          console.log("Dữ liệu người dùng:", data); 
+          const tbody = document.querySelector('#friendsTable tbody');
+          tbody.innerHTML = '';
+
+          data.forEach(user => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td><input type="checkbox"></td>
+              <td>${user.userId}</td>
+              <td class="username">
+                <div> <img src="${user.profile.picture}" alt="Avatar"></div>
+                ${user.username}
+              </td>
+              <td>${user.email}</td>
+              <td>${user.gender === 1 ? "Nam" : "Nữ"}</td>
+              <td>
+                <a href="/Users/viewUser/${user.userId}">Chi tiết</a>
+              </td>
+              <td><a href="/Users/editUser?id=${user.userId}">Sửa</a></td>
+            `;
+            tbody.appendChild(row);
+          });
+
+          renderPagination(totalPages);
+        })
+        .catch(err => console.error('Lỗi khi tải dữ liệu:', err));
+    }
+
+    function renderPagination(totalPages) {
+      const container = document.getElementById('pagination');
+      container.innerHTML = '';
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i;
+        btn.onclick = () => {
+          currentPage = i;
+          loadUsers();
+        };
+        container.appendChild(btn);
+      }
+    }
+
+    function viewUser(id) {
+      fetch(`/Users/displayUser/${id}`)
+        .then(res => res.json())
+        .then(user => {
+          alert(` ${user.name.first} ${user.name.last}\n${user.email}\n${user.profile.phone}`);
+        })
+        .catch(err => alert('Không thể tải chi tiết người dùng.'));
+    }
+
+    function searchUsers() {
+      const searchInput = document.getElementById('searchInput').value.toLowerCase().trim();
+      if (!searchInput) {
+        // If search is empty, show all rows
+        document.querySelectorAll('#friendsTable tbody tr').forEach(row => {
+          row.style.display = '';
+        });
+        return;
+      }
+      
+      const rows = document.querySelectorAll('#friendsTable tbody tr');
+      rows.forEach(row => {
+        // Get text from all relevant cells
+        const userId = row.cells[1].textContent.toLowerCase();
+        
+        // For username, we need to be careful because it has nested elements
+        // We're getting just the text part, not the image alt text
+        const usernameText = row.cells[2].textContent.toLowerCase().trim();
+        
+        const email = row.cells[3].textContent.toLowerCase();
+        const gender = row.cells[4].textContent.toLowerCase();
+        
+        // Debug
+        console.log("Searching in:", {userId, usernameText, email, gender});
+        
+        // Check if any field contains the search input
+        if (userId.includes(searchInput) || 
+            usernameText.includes(searchInput) || 
+            email.includes(searchInput) || 
+            gender.includes(searchInput)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    function applyFilters() {
+      const genderlist = document.getElementById('gender').value;
+      const rows = document.querySelectorAll('#friendsTable tbody tr');
+      const genderMap = {
+        "0": "Nam",
+        "1": "Nữ"
+      };
+      rows.forEach(row => {
+        const genderText = row.cells[3].textContent.trim(); // Cột giới tính, ví dụ: "Nam" hoặc "NỮ"
+
+        // Nếu không chọn gì thì hiện hết, hoặc nếu khớp thì hiện
+        if (!genderlist ||  genderText === genderMap[genderlist]) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    loadUsers();
+  </script>
+  
+</body>
+</html>

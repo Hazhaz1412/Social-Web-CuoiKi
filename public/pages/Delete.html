@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete User</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        form {
+            background-color: #fff;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        label {
+            font-weight: bold;
+            color: #555;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        input:focus, select:focus, button:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 4px rgba(0, 123, 255, 0.5);
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:active {
+            background-color: #004085;
+        }
+    </style>
+    <script>
+        function toggleInputField() {
+            const deleteBy = document.getElementById("deleteBy").value;
+            const userIdField = document.getElementById("userIdField");
+            const usernameField = document.getElementById("usernameField");
+    
+            if (deleteBy === "userId") {
+                userIdField.style.display = "block";
+                usernameField.style.display = "none";
+            } else if (deleteBy === "username") {
+                userIdField.style.display = "none";
+                usernameField.style.display = "block";
+            }
+        }
+    
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.querySelector("form");
+    
+            form.addEventListener("submit", async function (e) {
+                e.preventDefault();
+    
+                const deleteBy = document.getElementById("deleteBy").value;
+                const userId = document.getElementById("userId").value;
+                const username = document.getElementById("username").value;
+    
+                const body = {
+    deleteBy,
+    userId,
+    username
+};
+    
+                try {
+                    const response = await fetch("/api/delete-user", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(body)
+                    });
+    
+                    const result = await response.json();
+    
+                    if (response.ok) {
+                        alert(result.message);
+                        form.reset();
+                        toggleInputField();
+                    } else {
+                        alert(result.error);
+                    }
+                } catch (error) {
+                    console.error("Lỗi khi gọi API:", error);
+                    alert("Lỗi kết nối máy chủ!");
+                }
+            });
+        });
+    </script>
+    
+</head>
+<body>
+    <h1>Delete User</h1>
+    <form action="/api/delete-user" method="POST">
+        <label for="deleteBy">Delete By:</label>
+        <select id="deleteBy" name="deleteBy" onchange="toggleInputField()" required>
+            <option value="userId">User ID</option>
+            <option value="username">Username</option>
+        </select><br><br>
+
+        <div id="userIdField">
+            <label for="userId">User ID:</label>
+            <input type="text" id="userId" name="userId" placeholder="Enter User ID"><br><br>
+        </div>
+
+        <div id="usernameField" style="display: none;">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" placeholder="Enter Username"><br><br>
+        </div>
+
+        <button type="submit">Delete User</button>
+    </form>
+</body>
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Profile</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #fff;
+    }
+    .py-4 {
+      padding: 20px 0;
+    }
+    .mb-4 {
+      margin-bottom: 20px;
+    }
+    h1, h2, h5 {
+      margin: 0;
+    }
+    a {
+      text-decoration: none;
+      color: #007bff;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    /* Breadcrumb */
+    .breadcrumb {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      font-size: 14px;
+      margin: 10px 0 0;
+    }
+    .breadcrumb li {
+      margin-right: 8px;
+    }
+    .breadcrumb li+li:before {
+      content: ">";
+      margin-right: 8px;
+    }
+    /* Profile image */
+    .profile-img {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 50%;
+      margin-bottom: 20px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    /* Alert messages */
+    .alert {
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      position: relative;
+    }
+    .alert-success {
+      background-color: #d4edda;
+      border-color: #c3e6cb;
+      color: #155724;
+    }
+    .alert-danger {
+      background-color: #f8d7da;
+      border-color: #f5c6cb;
+      color: #721c24;
+    }
+    .close-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    /* Spinner */
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    /* Card style */
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    .card-header {
+      background-color: #f8f9fa;
+      padding: 10px 15px;
+      border-bottom: 1px solid #ddd;
+    }
+    .card-body {
+      padding: 15px;
+    }
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      padding: 8px 12px;
+      text-decoration: none;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      font-size: 14px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    .btn-primary {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+    }
+    .btn-danger {
+      background-color: #dc3545;
+      color: #fff;
+      border: none;
+    }
+    .btn-secondary {
+      background-color: #6c757d;
+      color: #fff;
+      border: none;
+    }
+    .d-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .me-2 {
+      margin-right: 8px;
+    }
+    .badge {
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #fff;
+    }
+    .badge-success {
+      background-color: #28a745;
+    }
+    .badge-secondary {
+      background-color: #6c757d;
+    }
+    .text-muted {
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="mb-4">
+      <h1>User Profile</h1>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li><a href="/pages/index.html">User List</a></li>
+          <li>User Profile</li>
+        </ol>
+      </nav>
+    </div>
+
+    <div id="alert-container"></div>
+
+    <div id="loading" class="text-center py-4">
+      <div class="spinner" role="status"></div>
+      <p>Loading user profile...</p>
+    </div>
+
+    <div id="userProfile" style="display: none;">
+      <div class="text-center mb-4">
+        <img id="userProfilePic" class="profile-img" src="" alt="Profile Picture">
+        <h2 id="userName"></h2>
+        <p id="userEmail" class="text-muted"></p>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5>User Information</h5>
+        </div>
+        <div class="card-body">
+          <p><strong>Role:</strong> <span id="userRole"></span></p>
+          <p><strong>Status:</strong> <span id="userStatus"></span></p>
+          <p><strong>Created:</strong> <span id="userCreated"></span></p>
+        </div>
+      </div>
+
+      <div class="d-flex">
+        <a href="/pages/index.html" class="btn btn-secondary">Back to List</a>
+        <div>
+          <a id="editLink" href="" class="btn btn-primary me-2">Edit User</a>
+          <a id="deleteLink" href="" class="btn btn-danger">Delete User</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Get URL parameters
+    function getUrlParam(param) {
+      const id = window.location.pathname.split("/").pop(); 
+      return id;
+    }
+
+// Show alert message
+function showAlert(message, type = 'success') {
+  const alertContainer = document.getElementById('alert-container');
+  alertContainer.innerHTML = ` 
+    <div class="alert ${type === 'danger' ? 'alert-danger' : 'alert-success'}">
+      ${message}
+      <button class="close-btn" onclick="this.parentElement.remove()">&times;</button>
+    </div>
+  `;
+}
+
+// Format date
+function formatDate(dateString) {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+}
+
+// Get user ID from URL
+const userId = getUrlParam('id');
+
+if (!userId) {
+  showAlert('User ID is missing. Redirecting to user list...', 'danger');
+  setTimeout(() => {
+    window.location.href = '/pages/home.html';
+  }, 2000);
+} else {
+  // Update links
+  document.getElementById('editLink').href = `/pages/edit-user.html?id=${userId}`;
+  document.getElementById('deleteLink').href = `/pages/delete-user.html?id=${userId}`;
+  
+  // Fetch user data
+  fetch(`/Users/viewUser/Detail/${userId}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('User not found');
+      }
+      return response.json();
+    })
+    .then(user => {
+      // Combine first, middle, and last name
+      const fullName = `${user.name.first} ${user.name.middle} ${user.name.last}`;
+      
+      // Set profile picture and user details
+      document.getElementById('userProfilePic').src = user.profile.picture || "/images/default.png";
+      document.getElementById('userName').textContent = fullName;
+      document.getElementById('userEmail').textContent = user.email;
+      document.getElementById('userRole').textContent = user.auth ? 'User' : 'Unknown'; // Assuming 'auth' field for role
+      document.getElementById('userStatus').innerHTML = user.status.isActive ? 
+        '<span class="badge badge-success">Active</span>' : 
+        '<span class="badge badge-secondary">Inactive</span>';
+      document.getElementById('userCreated').textContent = formatDate(user.status.createdAt);
+      
+      // Hide loading, show profile
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('userProfile').style.display = 'block';
+      
+      document.title = `${fullName} - User Profile`;
+    })
+    .catch(error => {
+      console.error('Error fetching user:', error);
+      showAlert('User not found or error loading user data.', 'danger');
+      document.getElementById('loading').innerHTML = `
+        <div class="alert alert-danger">
+          User not found or error loading user data.
+        </div>
+      `;
+    });
+}
+  </script>
+</body>
+</html>
